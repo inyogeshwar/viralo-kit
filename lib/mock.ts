@@ -85,9 +85,18 @@ export function mockMediaAnalytics(limit = 10) {
 }
 
 export function mockPublishResult(
-  mediaType: "image" | "carousel",
+  mediaType: "image" | "carousel" | "reel",
   mediaUrls: string[],
 ) {
+  if (mediaType === "reel") {
+    return {
+      mediaType,
+      containerId: "mock_reel_1",
+      mediaId: "mock_media_reel",
+      permalink: "https://www.instagram.com/reel/MOCK-REEL/",
+      mediaUrls,
+    };
+  }
   if (mediaType === "image") {
     return {
       mediaType,

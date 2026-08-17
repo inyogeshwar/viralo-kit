@@ -23,15 +23,18 @@ export async function POST(req: NextRequest) {
   const scheduledAtRaw = (formData.get("scheduledAt") as string) ?? "";
   const files = formData.getAll("images").filter((f): f is File => f instanceof File);
 
-  if (mediaType !== "image" && mediaType !== "carousel") {
-    return jsonError("mediaType must be 'image' or 'carousel'.");
+  if (mediaType !== "image" && mediaType !== "carousel" && mediaType !== "reel") {
+    return jsonError("mediaType must be 'image', 'carousel', or 'reel'.");
   }
-  if (!files.length) return jsonError("Select at least one image.");
+  if (!files.length) return jsonError("Select at least one file.");
   if (mediaType === "image" && files.length !== 1) {
     return jsonError("A single image post takes exactly one image.");
   }
   if (mediaType === "carousel" && (files.length < 2 || files.length > 10)) {
     return jsonError("A carousel needs between 2 and 10 images.");
+  }
+  if (mediaType === "reel" && files.length !== 1) {
+    return jsonError("A reel takes exactly one video file.");
   }
 
   const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw) : null;
@@ -97,10 +100,13 @@ export async function POST(req: NextRequest) {
 
   if (!isScheduled) {
     try {
-      publishResult =
-        mediaType === "image"
-          ? await provider.publishImage(mediaUrls[0], caption)
-          : await provider.publishCarousel(mediaUrls, caption);
+      if (mediaType === "reel") {
+        publishResult = await provider.publishReel(mediaUrls[0], caption);
+      } else if (mediaType === "image") {
+        publishResult = await provider.publishImage(mediaUrls[0], caption);
+      } else {
+        publishResult = await provider.publishCarousel(mediaUrls, caption);
+      }
     } catch (err) {
       status = "failed";
       error = err instanceof InstagramError ? err.message : String(err);
