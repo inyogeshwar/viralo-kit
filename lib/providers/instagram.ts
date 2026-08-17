@@ -185,7 +185,73 @@ export class InstagramProvider {
     };
   }
 
-  // --- Send Message (Instagram Messaging API) ---
+  // --- Reel/Video Publishing ---
+
+  async createReelContainer(videoUrl: string, caption = "") {
+    const data = await this.post("media", {
+      media_type: "REELS",
+      video_url: videoUrl,
+      caption,
+    });
+    return data["id"] as string;
+  }
+
+  async publishReel(videoUrl: string, caption = "") {
+    const containerId = await this.createReelContainer(videoUrl, caption);
+    return {
+      mediaType: "reel",
+      containerId,
+      mediaId: await this.publishContainer(containerId),
+    };
+  }
+
+  // --- Comments ---
+
+  async getPostComments(mediaId: string, limit = 25) {
+    const data = await this.getNode(`${mediaId}/comments`, {
+      fields: "id,text,timestamp,username,like_count",
+      limit: String(limit),
+    });
+    return (data["data"] as Array<Record<string, unknown>>) ?? [];
+  }
+
+  async getCommentReplies(commentId: string, limit = 25) {
+    const data = await this.getNode(`${commentId}/replies`, {
+      fields: "id,text,timestamp,username,like_count",
+      limit: String(limit),
+    });
+    return (data["data"] as Array<Record<string, unknown>>) ?? [];
+  }
+
+  async createComment(mediaId: string, text: string) {
+    const data = await this.post(`${mediaId}/comments`, { text });
+    return data["id"] as string;
+  }
+
+  async replyToComment(commentId: string, text: string) {
+    const data = await this.post(`${commentId}/replies`, { text });
+    return data["id"] as string;
+  }
+
+  // --- Stories ---
+
+  async getStories(limit = 25) {
+    const data = await this.get("stories", {
+      fields: "id,media_type,media_url,timestamp,permalink",
+      limit: String(limit),
+    });
+    return (data["data"] as Array<Record<string, unknown>>) ?? [];
+  }
+
+  // --- Public User Info ---
+
+  async getPublicUserInfo(userId: string) {
+    return this.getNode(userId, {
+      fields: "id,username,name,profile_picture_url,followers_count,media_count",
+    });
+  }
+
+  // --- Messaging (Send + Reply) ---
 
   async sendTextMessage(recipientId: string, text: string) {
     const url = this.igBase("messages");
@@ -193,6 +259,18 @@ export class InstagramProvider {
       url,
       {
         recipient: { id: recipientId },
+        message: { text },
+      },
+      this.accessToken,
+    );
+  }
+
+  async replyToMessage(messageId: string, text: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: messageId },
         message: { text },
       },
       this.accessToken,
