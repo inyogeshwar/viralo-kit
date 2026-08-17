@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 
 export const GRAPH_BASE = "https://graph.facebook.com";
+export const GRAPH_BASE_INSTAGRAM = "https://graph.instagram.com";
 
 export class InstagramError extends Error {
   code: number | string;
@@ -48,6 +49,25 @@ async function graphPost(
   return data as Record<string, unknown>;
 }
 
+async function graphPostJson(
+  url: string,
+  jsonBody: Record<string, unknown>,
+  token: string,
+) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(jsonBody),
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  if (!res.ok) raiseApiError(res.status, data);
+  return data as Record<string, unknown>;
+}
+
 export interface InstagramCredentials {
   igUserId: string;
   accessToken: string;
@@ -67,8 +87,17 @@ export class InstagramProvider {
     return `${GRAPH_BASE}/${env.meta.apiVersion}/${node}`;
   }
 
+  private igBase(path: string) {
+    const node = path ? `${this.igUserId}/${path}` : this.igUserId;
+    return `${GRAPH_BASE_INSTAGRAM}/${env.meta.apiVersion}/${node}`;
+  }
+
   private async post(path: string, params: Record<string, string>) {
     return graphPost(this.base(path), params, this.accessToken);
+  }
+
+  private async postIg(path: string, params: Record<string, string>) {
+    return graphPost(this.igBase(path), params, this.accessToken);
   }
 
   private async get(path: string, params: Record<string, string>) {
@@ -156,6 +185,73 @@ export class InstagramProvider {
     };
   }
 
+  // --- Send Message (Instagram Messaging API) ---
+
+  async sendTextMessage(recipientId: string, text: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: { text },
+      },
+      this.accessToken,
+    );
+  }
+
+  async sendImageMessage(recipientId: string, imageUrl: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: {
+          attachment: {
+            type: "image",
+            payload: { url: imageUrl },
+          },
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  async sendVideoMessage(recipientId: string, videoUrl: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: {
+          attachment: {
+            type: "video",
+            payload: { url: videoUrl },
+          },
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  async sendMediaShareMessage(recipientId: string, postId: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: {
+          attachment: {
+            type: "MEDIA_SHARE",
+            payload: { id: postId },
+          },
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Insights ---
+
   static MEDIA_INSIGHT_METRICS: Record<string, string> = {
     IMAGE: "reach,likes,comments,shares,saved,total_interactions",
     CAROUSEL: "reach,likes,comments,shares,saved,total_interactions",
@@ -242,7 +338,7 @@ export class InstagramProvider {
   }
 }
 
-// --- Instagram Login (with Facebook) OAuth helpers ---
+// --- Instagram Login OAuth helpers ---
 
 export function buildInstagramAuthUrl(state: string) {
   const params = new URLSearchParams({
@@ -256,7 +352,7 @@ export function buildInstagramAuthUrl(state: string) {
 }
 
 export async function exchangeCodeForToken(code: string) {
-  const url = `${GRAPH_BASE}/${env.meta.apiVersion}/oauth/access_token`;
+  const url = `${GRAPH_BASE_INSTAGRAM}/${env.meta.apiVersion}/oauth/access_token`;
   const params = new URLSearchParams({
     client_id: env.meta.clientId,
     client_secret: env.meta.clientSecret,
@@ -270,12 +366,11 @@ export async function exchangeCodeForToken(code: string) {
 }
 
 export async function exchangeForLongLivedToken(shortLivedToken: string) {
-  const url = `${GRAPH_BASE}/${env.meta.apiVersion}/oauth/access_token`;
+  const url = `${GRAPH_BASE_INSTAGRAM}/${env.meta.apiVersion}/oauth/access_token`;
   const params = new URLSearchParams({
-    grant_type: "fb_exchange_token",
-    client_id: env.meta.clientId,
+    grant_type: "ig_exchange_token",
     client_secret: env.meta.clientSecret,
-    fb_exchange_token: shortLivedToken,
+    access_token: shortLivedToken,
   });
   const res = await fetch(url, { method: "POST", body: params });
   const data = await res.json();
@@ -291,7 +386,7 @@ export interface IgBusinessAccount {
 }
 
 export async function findIgBusinessAccount(token: string) {
-  const url = `${GRAPH_BASE}/${env.meta.apiVersion}/me/accounts?fields=id,name,instagram_business_account{id,username,profile_picture_url}&access_token=${encodeURIComponent(token)}`;
+  const url = `${GRAPH_BASE_INSTAGRAM}/${env.meta.apiVersion}/me/accounts?fields=id,name,instagram_business_account{id,username,profile_picture_url}&access_token=${encodeURIComponent(token)}`;
   const res = await fetch(url, { method: "GET" });
   const data = await res.json();
   if (!res.ok) raiseApiError(res.status, data);
