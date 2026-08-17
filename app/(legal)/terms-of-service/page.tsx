@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — InstaPilot",
-  description: "InstaPilot Terms of Service — rules and guidelines for using our platform.",
+  title: "Terms of Service — ViraloKit",
+  description: "ViraloKit Terms of Service — rules and guidelines for using our platform.",
 };
 
 export default function TermsOfServicePage() {
@@ -13,13 +13,13 @@ export default function TermsOfServicePage() {
 
       <h2>1. Acceptance of Terms</h2>
       <p>
-        By accessing or using InstaPilot (&quot;the Service&quot;), you agree to be bound by these Terms of Service.
+        By accessing or using ViraloKit (&quot;the Service&quot;), you agree to be bound by these Terms of Service.
         If you do not agree, do not use the Service.
       </p>
 
       <h2>2. Description of Service</h2>
       <p>
-        InstaPilot is a social media management platform that allows users to:
+        ViraloKit is a social media management platform that allows users to:
       </p>
       <ul>
         <li>Connect and manage multiple Instagram accounts</li>
@@ -60,7 +60,7 @@ export default function TermsOfServicePage() {
 
       <h2>6. Content and Intellectual Property</h2>
       <ul>
-        <li>You retain ownership of all content you create and publish through InstaPilot</li>
+        <li>You retain ownership of all content you create and publish through ViraloKit</li>
         <li>By using the Service, you grant us a limited license to process and publish your content on your behalf</li>
         <li>AI-generated captions are provided as suggestions — you are responsible for reviewing them before publishing</li>
         <li>We do not claim ownership over your content</li>
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
 
       <h2>8. Limitation of Liability</h2>
       <p>
-        InstaPilot is provided &quot;as is&quot; without warranties of any kind. We shall not be liable for any
+        ViraloKit is provided &quot;as is&quot; without warranties of any kind. We shall not be liable for any
         indirect, incidental, special, consequential, or punitive damages arising from your use of the Service.
         Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.
       </p>
@@ -104,7 +104,7 @@ export default function TermsOfServicePage() {
       <h2>12. Contact</h2>
       <p>
         Questions about these Terms? Contact us at{" "}
-        <a href="mailto:legal@instapilot.app">legal@instapilot.app</a>.
+        <a href="mailto:legal@viraloKit.app">legal@viraloKit.app</a>.
       </p>
     </article>
   );

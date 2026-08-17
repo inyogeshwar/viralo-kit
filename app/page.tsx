@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { SignInButton, UserButton } from "@clerk/nextjs";
 import {
@@ -55,7 +55,7 @@ export default async function LandingPage() {
       <header className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2 text-lg font-bold">
           <Zap className="size-5 text-rose-500" />
-          InstaPilot
+          ViraloKit
         </div>
         <nav className="flex items-center gap-4">
           <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -114,7 +114,7 @@ export default async function LandingPage() {
       </main>
 
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
-        InstaPilot — built with Next.js, Clerk, Neon, Drizzle, Cloudinary & Gemini.
+        ViraloKit — built with Next.js, Clerk, Neon, Drizzle, Cloudinary & Gemini.
       </footer>
     </div>
   );

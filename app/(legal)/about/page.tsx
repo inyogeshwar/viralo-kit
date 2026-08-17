@@ -1,16 +1,16 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Zap, Heart, Globe, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About — InstaPilot",
-  description: "Learn about InstaPilot — the AI-powered social media management platform.",
+  title: "About — ViraloKit",
+  description: "Learn about ViraloKit — the AI-powered social media management platform.",
 };
 
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <div className="prose prose-neutral dark:prose-invert mb-16">
-        <h1>About InstaPilot</h1>
+        <h1>About ViraloKit</h1>
         <p className="text-lg text-muted-foreground">
           AI-powered social media management for modern creators and businesses.
         </p>
@@ -57,7 +57,7 @@ export default function AboutPage() {
       <div className="mt-16 rounded-xl border bg-card p-8 text-center">
         <h2 className="mb-4 text-2xl font-bold">Our Mission</h2>
         <p className="mx-auto max-w-2xl text-muted-foreground">
-          We believe managing social media should be simple, not overwhelming. InstaPilot combines
+          We believe managing social media should be simple, not overwhelming. ViraloKit combines
           the power of AI with intuitive design to help creators and businesses focus on what matters
           most — creating great content and building their audience.
         </p>
@@ -68,7 +68,7 @@ export default function AboutPage() {
           Built with Next.js, Clerk, Cloudinary, Gemini AI, and Instagram Graph API.
         </p>
         <p className="mt-2">
-          &copy; {new Date().getFullYear()} InstaPilot. All rights reserved.
+          &copy; {new Date().getFullYear()} ViraloKit. All rights reserved.
         </p>
       </div>
     </div>

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 import { getDb, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-const VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "instapilot-verify-token";
+const VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "ViraloKit-verify-token";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);

@@ -1,4 +1,4 @@
-import { CheckCircle2, Shield, XCircle } from "lucide-react";
+﻿import { CheckCircle2, Shield, XCircle } from "lucide-react";
 
 import { AddAccountForm } from "@/components/add-account-form";
 import { RemoveAccountButton } from "@/components/remove-account-button";
@@ -106,7 +106,7 @@ export default async function AccountsPage({
               Permissions requested
             </CardTitle>
             <CardDescription>
-              InstaPilot will request the following access when you connect your account.
+              ViraloKit will request the following access when you connect your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

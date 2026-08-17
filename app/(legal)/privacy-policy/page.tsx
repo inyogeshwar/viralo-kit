@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — InstaPilot",
-  description: "InstaPilot Privacy Policy — how we collect, use, and protect your data.",
+  title: "Privacy Policy — ViraloKit",
+  description: "ViraloKit Privacy Policy — how we collect, use, and protect your data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>1. Introduction</h2>
       <p>
-        Welcome to InstaPilot (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your
+        Welcome to ViraloKit (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We are committed to protecting your
         personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose,
         and safeguard your information when you use our social media management platform.
       </p>
@@ -37,7 +37,7 @@ export default function PrivacyPolicyPage() {
 
       <h3>2.3 Media Files</h3>
       <ul>
-        <li>Images and videos uploaded through InstaPilot (stored on Cloudinary)</li>
+        <li>Images and videos uploaded through ViraloKit (stored on Cloudinary)</li>
         <li>Media metadata (dimensions, format, file size)</li>
       </ul>
 
@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>3. How We Use Your Information</h2>
       <ul>
-        <li>To provide and maintain the InstaPilot service</li>
+        <li>To provide and maintain the ViraloKit service</li>
         <li>To publish content to your Instagram accounts on your behalf</li>
         <li>To generate AI-powered captions using Google Gemini</li>
         <li>To display analytics and engagement data for your accounts</li>
@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>8. Children&apos;s Privacy</h2>
       <p>
-        InstaPilot is not intended for users under the age of 13. We do not knowingly collect personal
+        ViraloKit is not intended for users under the age of 13. We do not knowingly collect personal
         information from children.
       </p>
 
@@ -109,7 +109,7 @@ export default function PrivacyPolicyPage() {
       <h2>10. Contact Us</h2>
       <p>
         If you have questions about this Privacy Policy, please contact us at{" "}
-        <a href="mailto:privacy@instapilot.app">privacy@instapilot.app</a>.
+        <a href="mailto:privacy@viraloKit.app">privacy@viraloKit.app</a>.
       </p>
     </article>
   );

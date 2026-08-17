@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "InstaPilot — AI Social Media Management",
+  title: "ViraloKit — AI Social Media Management",
   description:
     "Publish and analyze Instagram posts across multiple accounts. AI captions, scheduling, and analytics in one place.",
 };

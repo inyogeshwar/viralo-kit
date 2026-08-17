@@ -1,4 +1,4 @@
-# InstaPilot — AI Social Media Management
+﻿# ViraloKit — AI Social Media Management
 
 AI-powered visual social media management (a "Creator OS"). Manage multiple Instagram accounts from one dashboard — publish images and carousels, schedule posts, analyze real analytics, and generate AI captions.
 

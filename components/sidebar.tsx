@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,7 +68,7 @@ export function Sidebar() {
     <aside className="hidden w-56 shrink-0 flex-col border-r bg-card px-3 py-4 md:flex">
       <Link href="/dashboard" className="mb-6 flex items-center gap-2 px-2 text-lg font-bold">
         <Zap className="size-5 text-rose-500" />
-        InstaPilot
+        ViraloKit
       </Link>
       <NavLinks />
       <div className="mt-auto space-y-4 pt-4">
@@ -97,7 +97,7 @@ export function MobileSidebar() {
         <div className="mb-6 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold" onClick={() => setOpen(false)}>
             <Zap className="size-5 text-rose-500" />
-            InstaPilot
+            ViraloKit
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setOpen(false)} className="size-8">
             <X className="size-4" />

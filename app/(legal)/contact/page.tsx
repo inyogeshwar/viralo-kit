@@ -23,24 +23,24 @@ export default function ContactPage() {
         <div className="flex flex-col items-center rounded-xl border bg-card p-6 text-center">
           <Mail className="mb-3 size-6 text-rose-500" />
           <h3 className="mb-1 text-sm font-semibold">Email</h3>
-          <a href="mailto:support@instapilot.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            support@instapilot.app
+          <a href="mailto:support@viraloKit.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            support@viraloKit.app
           </a>
         </div>
 
         <div className="flex flex-col items-center rounded-xl border bg-card p-6 text-center">
           <MessageSquare className="mb-3 size-6 text-blue-500" />
           <h3 className="mb-1 text-sm font-semibold">Feedback</h3>
-          <a href="mailto:feedback@instapilot.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            feedback@instapilot.app
+          <a href="mailto:feedback@viraloKit.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            feedback@viraloKit.app
           </a>
         </div>
 
         <div className="flex flex-col items-center rounded-xl border bg-card p-6 text-center">
           <Send className="mb-3 size-6 text-green-500" />
           <h3 className="mb-1 text-sm font-semibold">Business</h3>
-          <a href="mailto:hello@instapilot.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            hello@instapilot.app
+          <a href="mailto:hello@viraloKit.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            hello@viraloKit.app
           </a>
         </div>
       </div>

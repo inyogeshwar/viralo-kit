@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Refund Policy — InstaPilot",
-  description: "InstaPilot Refund Policy — information about refunds and cancellations.",
+  title: "Refund Policy — ViraloKit",
+  description: "ViraloKit Refund Policy — information about refunds and cancellations.",
 };
 
 export default function RefundPolicyPage() {
@@ -13,13 +13,13 @@ export default function RefundPolicyPage() {
 
       <h2>1. Overview</h2>
       <p>
-        We want you to be satisfied with InstaPilot. If you&apos;re not happy with your purchase,
+        We want you to be satisfied with ViraloKit. If you&apos;re not happy with your purchase,
         we&apos;re here to help with refunds as described below.
       </p>
 
       <h2>2. Free Tier</h2>
       <p>
-        InstaPilot offers a free tier with limited features. No payment is required to use the free tier,
+        ViraloKit offers a free tier with limited features. No payment is required to use the free tier,
         and no refund is applicable.
       </p>
 
@@ -41,7 +41,7 @@ export default function RefundPolicyPage() {
 
       <h2>4. How to Request a Refund</h2>
       <ul>
-        <li>Email us at <a href="mailto:billing@instapilot.app">billing@instapilot.app</a></li>
+        <li>Email us at <a href="mailto:billing@viraloKit.app">billing@viraloKit.app</a></li>
         <li>Include your account email and reason for refund</li>
         <li>Refunds are processed within 5-10 business days</li>
         <li>Refunds are issued to the original payment method</li>
@@ -64,7 +64,7 @@ export default function RefundPolicyPage() {
       <h2>7. Contact</h2>
       <p>
         For refund requests or billing questions, email{" "}
-        <a href="mailto:billing@instapilot.app">billing@instapilot.app</a>.
+        <a href="mailto:billing@viraloKit.app">billing@viraloKit.app</a>.
       </p>
     </article>
   );

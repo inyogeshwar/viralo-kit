@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy — InstaPilot",
-  description: "InstaPilot Cookie Policy — how we use cookies and tracking technologies.",
+  title: "Cookie Policy — ViraloKit",
+  description: "ViraloKit Cookie Policy — how we use cookies and tracking technologies.",
 };
 
 export default function CookiePolicyPage() {
@@ -18,7 +18,7 @@ export default function CookiePolicyPage() {
       </p>
 
       <h2>2. How We Use Cookies</h2>
-      <p>InstaPilot uses cookies and similar technologies for the following purposes:</p>
+      <p>ViraloKit uses cookies and similar technologies for the following purposes:</p>
 
       <h3>2.1 Essential Cookies</h3>
       <p>These are necessary for the Service to function properly:</p>
@@ -74,7 +74,7 @@ export default function CookiePolicyPage() {
       <h2>7. Contact</h2>
       <p>
         Questions about our use of cookies? Contact us at{" "}
-        <a href="mailto:privacy@instapilot.app">privacy@instapilot.app</a>.
+        <a href="mailto:privacy@viraloKit.app">privacy@viraloKit.app</a>.
       </p>
     </article>
   );
