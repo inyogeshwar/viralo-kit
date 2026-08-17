@@ -252,7 +252,7 @@ export function buildInstagramAuthUrl(state: string) {
     response_type: "code",
     scope: env.instagramScopes.join(","),
   });
-  return `https://www.facebook.com/${env.meta.apiVersion}/dialog/oauth?${params.toString()}`;
+  return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
 }
 
 export async function exchangeCodeForToken(code: string) {
