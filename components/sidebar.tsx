@@ -71,7 +71,13 @@ export function Sidebar() {
         InstaPilot
       </Link>
       <NavLinks />
-      <div className="mt-auto pt-4">
+      <div className="mt-auto space-y-4 pt-4">
+        <nav className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <Link href="/about" className="hover:text-foreground transition-colors px-3 py-1">About</Link>
+          <Link href="/privacy-policy" className="hover:text-foreground transition-colors px-3 py-1">Privacy Policy</Link>
+          <Link href="/terms-of-service" className="hover:text-foreground transition-colors px-3 py-1">Terms of Service</Link>
+          <Link href="/contact" className="hover:text-foreground transition-colors px-3 py-1">Contact</Link>
+        </nav>
         <ThemeToggle />
       </div>
     </aside>
