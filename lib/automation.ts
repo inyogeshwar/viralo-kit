@@ -3,6 +3,9 @@ import { and, eq, desc } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { decryptToken } from "@/lib/crypto";
 import { InstagramProvider } from "@/lib/providers/instagram";
+import { acquireRateLimit } from "@/lib/rate-limiter";
+import { canReplyInWindow } from "@/lib/messaging-window";
+import { withBotDisclosure } from "@/lib/bot-disclosure";
 
 interface AutomationRule {
   id: string;
@@ -79,6 +82,14 @@ export async function processDmAautomation(
   });
   if (!account) return;
 
+  // Rate limit check
+  const canProceed = await acquireRateLimit(accountId, "text");
+  if (!canProceed) return;
+
+  // Check messaging window
+  const windowStatus = await canReplyInWindow(accountId, senderIgsid);
+  if (!windowStatus.canReply) return;
+
   const rules = await db.query.autoReplyRules.findMany({
     where: and(
       eq(schema.autoReplyRules.accountId, accountId),
@@ -100,15 +111,21 @@ export async function processDmAautomation(
     await new Promise((r) => setTimeout(r, bestMatch.delayMs));
   }
 
+  const disclosureEnabled = true;
+
   try {
     if (bestMatch.responseType === "quick_reply" && bestMatch.responsePayload) {
       const payload = bestMatch.responsePayload as {
         text?: string;
         replies?: Array<{ title: string; payload: string; imageUrl?: string }>;
       };
+      const responseText = withBotDisclosure(
+        payload.text ?? bestMatch.responseText,
+        disclosureEnabled,
+      );
       await provider.sendQuickReplies(
         senderIgsid,
-        payload.text ?? bestMatch.responseText,
+        responseText,
         payload.replies ?? [],
       );
     } else if (bestMatch.responseType === "button_template" && bestMatch.responsePayload) {
@@ -116,13 +133,25 @@ export async function processDmAautomation(
         text?: string;
         buttons?: Array<{ type: string; url?: string; title: string; payload?: string }>;
       };
+      const responseText = withBotDisclosure(
+        payload.text ?? bestMatch.responseText,
+        disclosureEnabled,
+      );
       await provider.sendButtonTemplate(
         senderIgsid,
-        payload.text ?? bestMatch.responseText,
+        responseText,
         (payload.buttons ?? []) as Parameters<InstagramProvider["sendButtonTemplate"]>[2],
       );
     } else {
-      await provider.sendTextMessage(senderIgsid, bestMatch.responseText);
+      const responseText = withBotDisclosure(bestMatch.responseText, disclosureEnabled);
+      // Use human agent tag if outside 24h window but within 7 days
+      if (windowStatus.needsHumanAgent) {
+        await provider.sendTextMessageHumanAgent(senderIgsid, responseText);
+      } else {
+        await provider.sendTextMessage(senderIgsid, responseText, {
+          messagingType: "RESPONSE",
+        });
+      }
     }
 
     await db
@@ -167,11 +196,17 @@ export async function processCommentAutomation(
   const token = decryptToken(account.accessToken);
   const provider = new InstagramProvider({ igUserId: account.igUserId, accessToken: token });
 
+  const disclosureEnabled = true;
+
   try {
+    const responseText = withBotDisclosure(bestMatch.responseText, disclosureEnabled);
     if (bestMatch.channel === "private_reply") {
-      await provider.sendPrivateReply(commentId, bestMatch.responseText);
+      // Rate limit for private replies
+      const canProceed = await acquireRateLimit(accountId, "private_reply");
+      if (!canProceed) return;
+      await provider.sendPrivateReply(commentId, responseText);
     } else {
-      await provider.replyToComment(commentId, bestMatch.responseText);
+      await provider.replyToComment(commentId, responseText);
     }
 
     await db

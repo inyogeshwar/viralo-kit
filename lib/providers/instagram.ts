@@ -253,16 +253,26 @@ export class InstagramProvider {
 
   // --- Messaging (Send + Reply) ---
 
-  async sendTextMessage(recipientId: string, text: string) {
+  async sendTextMessage(
+    recipientId: string,
+    text: string,
+    opts?: { tag?: string; messagingType?: string },
+  ) {
     const url = this.igBase("messages");
-    return graphPostJson(
-      url,
-      {
-        recipient: { id: recipientId },
-        message: { text },
-      },
-      this.accessToken,
-    );
+    const body: Record<string, unknown> = {
+      recipient: { id: recipientId },
+      message: { text },
+    };
+    if (opts?.messagingType) body.messaging_type = opts.messagingType;
+    if (opts?.tag) body.tag = opts.tag;
+    return graphPostJson(url, body, this.accessToken);
+  }
+
+  async sendTextMessageHumanAgent(recipientId: string, text: string) {
+    return this.sendTextMessage(recipientId, text, {
+      tag: "HUMAN_AGENT",
+      messagingType: "MESSAGE_TAG",
+    });
   }
 
   async replyToMessage(messageId: string, text: string) {
@@ -625,6 +635,53 @@ export class InstagramProvider {
       "reach,likes,comments,shares,saved,total_interactions";
     const data = await this.getNode(`${mediaId}/insights`, { metric: metrics });
     return InstagramProvider.normalizeInsights(data);
+  }
+
+  // --- Handover Protocol ---
+
+  async passThreadControl(recipientId: string, targetAppId: string, metadata?: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        thread_control: {
+          new_owner_app_id: targetAppId,
+          ...(metadata ? { metadata } : {}),
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  async takeThreadControl(recipientId: string, metadata?: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        thread_control: {
+          new_owner_app_id: this.igUserId,
+          ...(metadata ? { metadata } : {}),
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  async requestThreadControl(recipientId: string, metadata?: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        thread_control: {
+          request_owner_app_id: this.igUserId,
+          ...(metadata ? { metadata } : {}),
+        },
+      },
+      this.accessToken,
+    );
   }
 }
 
