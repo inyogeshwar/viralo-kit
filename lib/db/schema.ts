@@ -196,5 +196,38 @@ export const messages = pgTable(
   ],
 );
 
+export const autoReplyRules = pgTable(
+  "auto_reply_rules",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .references(() => workspaces.id, { onDelete: "cascade" })
+      .notNull(),
+    accountId: uuid("account_id")
+      .references(() => socialAccounts.id, { onDelete: "cascade" })
+      .notNull(),
+    name: text("name").notNull(),
+    trigger: text("trigger").notNull(), // "keyword" | "all_dms" | "all_comments" | "new_follower"
+    triggerValue: text("trigger_value"), // keyword(s) for keyword trigger, comma-separated
+    matchType: text("match_type").default("contains").notNull(), // "contains" | "exact" | "starts_with" | "regex"
+    channel: text("channel").default("dm").notNull(), // "dm" | "comment" | "private_reply"
+    responseType: text("response_type").default("text").notNull(), // "text" | "quick_reply" | "button_template" | "generic_template"
+    responsePayload: jsonb("response_payload"), // template/quick_reply JSON
+    responseText: text("response_text").notNull(),
+    delayMs: jsonb("delay_ms").$type<number>().default(0).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    priority: jsonb("priority").$type<number>().default(0).notNull(),
+    lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),
+    triggerCount: jsonb("trigger_count").$type<number>().default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("auto_reply_rules_workspace_idx").on(table.workspaceId),
+    index("auto_reply_rules_account_idx").on(table.accountId),
+    index("auto_reply_rules_active_idx").on(table.isActive),
+  ],
+);
+
 export type PostStatus = (typeof postStatusEnum.enumValues)[number];
 export type Role = (typeof roleEnum.enumValues)[number];

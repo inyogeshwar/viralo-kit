@@ -328,6 +328,218 @@ export class InstagramProvider {
     );
   }
 
+  // --- Quick Replies ---
+
+  async sendQuickReplies(
+    recipientId: string,
+    text: string,
+    replies: Array<{ title: string; payload: string; imageUrl?: string }>,
+  ) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        messaging_type: "RESPONSE",
+        message: {
+          text,
+          quick_replies: replies.map((r) => ({
+            content_type: "text" as const,
+            title: r.title,
+            payload: r.payload,
+            ...(r.imageUrl ? { image_url: r.imageUrl } : {}),
+          })),
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Button Template ---
+
+  async sendButtonTemplate(
+    recipientId: string,
+    text: string,
+    buttons: Array<
+      | { type: "web_url"; url: string; title: string }
+      | { type: "postback"; title: string; payload: string }
+    >,
+  ) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: {
+          attachment: {
+            type: "template",
+            payload: {
+              template_type: "button",
+              text,
+              buttons,
+            },
+          },
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Generic Template (Carousel) ---
+
+  async sendGenericTemplate(
+    recipientId: string,
+    elements: Array<{
+      title: string;
+      subtitle?: string;
+      imageUrl?: string;
+      defaultAction?: { type: "web_url"; url: string };
+      buttons?: Array<
+        | { type: "web_url"; url: string; title: string }
+        | { type: "postback"; title: string; payload: string }
+      >;
+    }>,
+  ) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: {
+          attachment: {
+            type: "template",
+            payload: {
+              template_type: "generic",
+              elements: elements.map((el) => ({
+                title: el.title,
+                ...(el.subtitle ? { subtitle: el.subtitle } : {}),
+                ...(el.imageUrl ? { image_url: el.imageUrl } : {}),
+                ...(el.defaultAction ? { default_action: el.defaultAction } : {}),
+                ...(el.buttons ? { buttons: el.buttons } : {}),
+              })),
+            },
+          },
+        },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Sender Actions ---
+
+  async sendSenderAction(
+    recipientId: string,
+    action: "typing_on" | "typing_off" | "mark_seen",
+  ) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        sender_action: action,
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Reply to Message (with reply_to) ---
+
+  async replyToMessageMid(recipientId: string, messageId: string, text: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: recipientId },
+        message: { text },
+        reply_to: { mid: messageId },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- React to Message ---
+
+  async reactToMessage(messageId: string, emoji: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: this.igUserId },
+        sender_action: "react",
+        payload: { message_id: messageId, reaction: emoji },
+      },
+      this.accessToken,
+    );
+  }
+
+  async unreactToMessage(messageId: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { id: this.igUserId },
+        sender_action: "unreact",
+        payload: { message_id: messageId },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Private Reply to Commenter ---
+
+  async sendPrivateReply(commentId: string, text: string) {
+    const url = this.igBase("messages");
+    return graphPostJson(
+      url,
+      {
+        recipient: { comment_id: commentId },
+        message: { text },
+      },
+      this.accessToken,
+    );
+  }
+
+  // --- Comment Moderation ---
+
+  async hideComment(commentId: string) {
+    const url = `${GRAPH_BASE}/${env.meta.apiVersion}/${commentId}`;
+    return graphPost(url, { hide: "true" }, this.accessToken);
+  }
+
+  async unhideComment(commentId: string) {
+    const url = `${GRAPH_BASE}/${env.meta.apiVersion}/${commentId}`;
+    return graphPost(url, { hide: "false" }, this.accessToken);
+  }
+
+  async deleteComment(commentId: string) {
+    const url = `${GRAPH_BASE}/${env.meta.apiVersion}/${commentId}?access_token=${this.accessToken}`;
+    const res = await fetch(url, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      raiseApiError(res.status, body);
+    }
+    return (await res.json()) as { success: boolean };
+  }
+
+  // --- Threads / Conversations ---
+
+  async getConversations(limit = 25) {
+    const data = await this.get("conversations", {
+      platform: "instagram",
+      fields: "id,snippet,unread_count,updated_time",
+      limit: String(limit),
+    });
+    return (data["data"] as Array<Record<string, unknown>>) ?? [];
+  }
+
+  async getConversationMessages(conversationId: string, limit = 25) {
+    const data = await this.getNode(`${conversationId}/messages`, {
+      fields: "id,text,from,timestamp,attachments",
+      limit: String(limit),
+    });
+    return (data["data"] as Array<Record<string, unknown>>) ?? [];
+  }
+
   // --- Insights ---
 
   static MEDIA_INSIGHT_METRICS: Record<string, string> = {

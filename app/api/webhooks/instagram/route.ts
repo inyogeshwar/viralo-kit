@@ -2,6 +2,7 @@
 
 import { getDb, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
+import { processDmAautomation, processCommentAutomation } from "@/lib/automation";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,9 @@ async function processWebhookEvent(body: Record<string, unknown>) {
               fromUserId: from?.["id"] ?? null,
             })
             .onConflictDoNothing();
+
+          // Trigger comment automation
+          processCommentAutomation(account.id, commentId, text, mediaId).catch(console.error);
         }
       }
 
@@ -115,6 +119,11 @@ async function processWebhookEvent(body: Record<string, unknown>) {
                 isFromUs,
               })
               .onConflictDoNothing();
+
+            // Trigger DM automation (only for incoming messages, not our own)
+            if (!isFromUs && text) {
+              processDmAautomation(account.id, senderId, text, msgId).catch(console.error);
+            }
           }
         }
       }

@@ -14,6 +14,7 @@ import {
   Users,
   X,
   Zap,
+  Bot,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/media", label: "Media", icon: Images },
   { href: "/inbox", label: "Inbox", icon: Inbox },
+  { href: "/automation", label: "Automation", icon: Bot },
   { href: "/accounts", label: "Accounts", icon: Users },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
