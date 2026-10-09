@@ -32,8 +32,15 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const formatErrorMessage = (msg: string) => {
+    if (msg.includes("Unsupported provider") || msg.includes("provider is not enabled") || msg.includes("validation_failed")) {
+      return "Google OAuth is not enabled in your Supabase project yet. Please use the Magic Link or Password tab below to sign in, or enable Google under Authentication > Providers in your Supabase Dashboard.";
+    }
+    return msg;
+  };
+
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
-    urlError ? { type: "error", text: decodeURIComponent(urlError) } : null
+    urlError ? { type: "error", text: formatErrorMessage(decodeURIComponent(urlError)) } : null
   );
 
   const supabase = createClient();
@@ -53,7 +60,7 @@ function LoginForm() {
       });
 
       if (error) {
-        setMessage({ type: "error", text: error.message });
+        setMessage({ type: "error", text: formatErrorMessage(error.message) });
         setIsGoogleLoading(false);
       }
       if (data?.url) {
@@ -61,7 +68,7 @@ function LoginForm() {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to initiate Google sign in";
-      setMessage({ type: "error", text: errorMessage });
+      setMessage({ type: "error", text: formatErrorMessage(errorMessage) });
       setIsGoogleLoading(false);
     }
   };

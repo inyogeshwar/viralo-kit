@@ -21,6 +21,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(data.url);
   }
 
-  const errorMsg = encodeURIComponent(error?.message || "oauth_failed");
+  const raw = error?.message || "oauth_failed";
+  const errorMsg = raw.includes("Unsupported provider") || raw.includes("provider is not enabled")
+    ? encodeURIComponent("Google OAuth is not enabled in Supabase yet. Please use the Magic Link or Password sign-in.")
+    : encodeURIComponent(raw);
   return NextResponse.redirect(new URL(`/login?error=${errorMsg}`, url.origin));
 }
