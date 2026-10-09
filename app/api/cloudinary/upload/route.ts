@@ -53,15 +53,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No image files provided for upload." }, { status: 400 });
     }
 
-    const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB Instagram limit
-    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/jpg"];
+    const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB for video/reels
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/jpg", "video/mp4", "video/quicktime"];
 
     const uploadedAssets = [];
     for (const file of files) {
       // Validate file size
       if (file.size > MAX_FILE_SIZE_BYTES) {
         return NextResponse.json(
-          { error: `File "${file.name}" exceeds the maximum allowed size of 8MB.` },
+          { error: `File "${file.name}" exceeds the maximum allowed size of 50MB.` },
           { status: 400 }
         );
       }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       // Validate MIME type
       if (file.type && !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
         return NextResponse.json(
-          { error: `File "${file.name}" has an unsupported format (${file.type}). Supported formats: JPG, PNG, WEBP, HEIC.` },
+          { error: `File "${file.name}" has an unsupported format (${file.type}). Supported formats: JPG, PNG, WEBP, MP4, MOV.` },
           { status: 400 }
         );
       }

@@ -93,12 +93,9 @@ async function waitForContainer(
 export async function publishSingleImage(
   imageUrl: string,
   caption: string,
-  customUserId?: string,
-  customAccessToken?: string
+  userId: string,
+  accessToken: string
 ): Promise<PublishResult> {
-  const userId = customUserId || config.meta.defaultUserId;
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!userId || !accessToken) {
     throw new MetaApiError("Missing Instagram credentials. Please connect your account in Settings.");
   }
@@ -151,12 +148,9 @@ export async function publishSingleImage(
 export async function publishCarousel(
   imageUrls: string[],
   caption: string,
-  customUserId?: string,
-  customAccessToken?: string
+  userId: string,
+  accessToken: string
 ): Promise<PublishResult> {
-  const userId = customUserId || config.meta.defaultUserId;
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!userId || !accessToken) {
     throw new MetaApiError("Missing Instagram credentials. Please connect your account in Settings.");
   }
@@ -240,3 +234,97 @@ export async function publishCarousel(
     publicUrls: imageUrls,
   };
 }
+
+export async function publishReel(
+  videoUrl: string,
+  caption: string,
+  userId: string,
+  accessToken: string
+): Promise<PublishResult> {
+  if (!userId || !accessToken) {
+    throw new MetaApiError("Missing Instagram credentials.");
+  }
+
+  // 1. Create Media Container for Reel
+  const container = await postMeta(
+    `${userId}/media`,
+    {
+      media_type: "REELS",
+      video_url: videoUrl,
+      caption: caption || "",
+      share_to_feed: "true",
+    },
+    accessToken
+  );
+
+  const containerId = container.id;
+
+  // 2. Poll for processing completion
+  await waitForContainer(containerId, accessToken, 30, 2000);
+
+  // 3. Publish
+  const published = await postMeta(
+    `${userId}/media_publish`,
+    { creation_id: containerId },
+    accessToken
+  );
+
+  const mediaId = published.id;
+  let permalink: string | undefined;
+  try {
+    const mediaDetails = await getMeta(mediaId, { fields: "permalink" }, accessToken);
+    permalink = mediaDetails.permalink;
+  } catch {}
+
+  return {
+    type: "REELS",
+    containerId,
+    mediaId,
+    permalink,
+    publishedAt: new Date().toISOString(),
+    publicUrls: [videoUrl],
+  };
+}
+
+export async function publishStory(
+  mediaUrl: string,
+  isVideo: boolean,
+  userId: string,
+  accessToken: string
+): Promise<PublishResult> {
+  if (!userId || !accessToken) {
+    throw new MetaApiError("Missing Instagram credentials.");
+  }
+
+  // 1. Create Media Container for Story
+  const payload: Record<string, string> = { media_type: "STORIES" };
+  if (isVideo) {
+    payload.video_url = mediaUrl;
+  } else {
+    payload.image_url = mediaUrl;
+  }
+
+  const container = await postMeta(`${userId}/media`, payload, accessToken);
+  const containerId = container.id;
+
+  // 2. Poll for processing
+  await waitForContainer(containerId, accessToken, 30, 2000);
+
+  // 3. Publish
+  const published = await postMeta(
+    `${userId}/media_publish`,
+    { creation_id: containerId },
+    accessToken
+  );
+
+  const mediaId = published.id;
+  
+  return {
+    type: "STORIES",
+    containerId,
+    mediaId,
+    publishedAt: new Date().toISOString(),
+    publicUrls: [mediaUrl],
+  };
+}
+

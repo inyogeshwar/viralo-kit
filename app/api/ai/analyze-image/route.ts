@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { analyzeImageWithAi } from "@/lib/ai/image-analysis";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getDb, schema } from "@/db";
+import { createClient } from "@/lib/supabase/server";
 
 import { isSafePublicUrl, sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -41,21 +41,20 @@ export async function POST(request: Request) {
 
     const analysis = await analyzeImageWithAi(imageUrl, modelId, enableGeminiFallback);
 
-    // Save record to Neon if DB available
-    const db = getDb();
-    if (db && user) {
+    // Save record to Supabase if DB available
+    const supabase = await createClient();
+    if (user) {
       try {
-        await db.insert(schema.aiGenerations).values({
-          id: crypto.randomUUID(),
-          workosUserId: user.workosUserId,
+        await supabase.from("ai_generations").insert({
+          user_id: user.id,
           provider: analysis.provider,
           model: analysis.model,
-          generationType: "image_analysis",
-          inputMetadata: { imageUrl },
+          generation_type: "image_analysis",
+          input_metadata: { imageUrl },
           output: JSON.stringify(analysis),
         });
       } catch (err) {
-        console.warn("Neon DB ai_generation save error:", err);
+        console.warn("Supabase DB ai_generation save error:", err);
       }
     }
 

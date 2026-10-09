@@ -15,10 +15,8 @@ export interface BulkDeleteSummary {
 
 export async function deleteInstagramMedia(
   mediaId: string,
-  customAccessToken?: string
+  accessToken: string
 ): Promise<{ success: boolean; reason?: string }> {
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!accessToken) {
     return {
       success: false,
@@ -76,7 +74,7 @@ export async function deleteInstagramMedia(
 
 export async function bulkDeleteInstagramMedia(
   mediaIds: string[],
-  customAccessToken?: string
+  accessToken: string
 ): Promise<BulkDeleteSummary> {
   const results: DeleteItemResult[] = [];
   let totalDeleted = 0;
@@ -84,7 +82,7 @@ export async function bulkDeleteInstagramMedia(
 
   for (let i = 0; i < mediaIds.length; i++) {
     const mediaId = mediaIds[i];
-    const outcome = await deleteInstagramMedia(mediaId, customAccessToken);
+    const outcome = await deleteInstagramMedia(mediaId, accessToken);
 
     if (outcome.success) {
       totalDeleted++;

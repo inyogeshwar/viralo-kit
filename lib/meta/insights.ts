@@ -19,12 +19,9 @@ function extractMetricValue(data: any[], metricName: string): number | null {
 
 export async function fetchRecentMedia(
   limit = 25,
-  customUserId?: string,
-  customAccessToken?: string
+  userId: string,
+  accessToken: string
 ): Promise<InstagramMediaItem[]> {
-  const userId = customUserId || config.meta.defaultUserId;
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!userId || !accessToken) {
     return [];
   }
@@ -57,12 +54,9 @@ export async function fetchRecentMedia(
 }
 
 export async function fetchAccountAnalytics(
-  customUserId?: string,
-  customAccessToken?: string
+  userId: string,
+  accessToken: string
 ): Promise<NormalizedAccountAnalytics | null> {
-  const userId = customUserId || config.meta.defaultUserId;
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!userId || !accessToken) {
     return null;
   }
@@ -108,6 +102,28 @@ export async function fetchAccountAnalytics(
       }
     } catch {
       // Metric not supported
+    }
+
+    // 2.5 Fetch Demographics
+    let audienceCity: Record<string, number> | undefined;
+    let audienceCountry: Record<string, number> | undefined;
+    let audienceGenderAge: Record<string, number> | undefined;
+    let onlineFollowers: Record<string, number> | undefined;
+
+    try {
+      const demoUrl = `${getMetaGraphUrl(`${userId}/insights`)}?metric=audience_city,audience_country,audience_gender_age,online_followers&period=lifetime&access_token=${encodeURIComponent(accessToken)}`;
+      const demoRes = await fetch(demoUrl);
+      const demoData = await demoRes.json();
+      if (demoRes.ok && Array.isArray(demoData.data)) {
+        demoData.data.forEach((metric: any) => {
+          if (metric.name === "audience_city") audienceCity = metric.values?.[0]?.value;
+          if (metric.name === "audience_country") audienceCountry = metric.values?.[0]?.value;
+          if (metric.name === "audience_gender_age") audienceGenderAge = metric.values?.[0]?.value;
+          if (metric.name === "online_followers") onlineFollowers = metric.values?.[0]?.value;
+        });
+      }
+    } catch {
+      // Metrics not supported or permission missing
     }
 
     // 3. Fetch Recent Media & Top Posts
@@ -156,6 +172,12 @@ export async function fetchAccountAnalytics(
         totalInteractions: totalInteractionsCalculated,
         averageEngagementRate: avgEngagementRate,
       },
+      demographics: {
+        audienceCity,
+        audienceCountry,
+        audienceGenderAge,
+        onlineFollowers,
+      },
       recentMedia,
       topPosts,
       snapshotsTimestamp: new Date().toISOString(),
@@ -168,10 +190,9 @@ export async function fetchAccountAnalytics(
 
 export async function fetchMediaInsights(
   mediaId: string,
-  mediaItem?: Partial<InstagramMediaItem> | null,
-  customAccessToken?: string
+  accessToken: string,
+  mediaItem?: Partial<InstagramMediaItem> | null
 ): Promise<InstagramPostInsights> {
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
 
   let views: number | null = null;
   let reach: number | null = null;
@@ -180,12 +201,17 @@ export async function fetchMediaInsights(
 
   if (accessToken && mediaId) {
     try {
-      // In Meta Graph API v23.0+, use supported metrics: views, reach, saved, total_interactions
-      const url = `${getMetaGraphUrl(`${mediaId}/insights`)}?metric=views,reach,saved,total_interactions&access_token=${encodeURIComponent(accessToken)}`;
+      let metricParams = "reach,saved,total_interactions";
+      if (mediaItem?.media_type === "VIDEO" || mediaItem?.media_type === "REELS") {
+        metricParams += ",plays";
+      } else {
+        metricParams += ",impressions";
+      }
+      const url = `${getMetaGraphUrl(`${mediaId}/insights`)}?metric=${metricParams}&access_token=${encodeURIComponent(accessToken)}`;
       const res = await fetch(url);
       const data = await res.json();
       if (res.ok && Array.isArray(data.data)) {
-        views = extractMetricValue(data.data, "views");
+        views = extractMetricValue(data.data, "plays") || extractMetricValue(data.data, "impressions");
         reach = extractMetricValue(data.data, "reach");
         saved = extractMetricValue(data.data, "saved");
         totalInteractions = extractMetricValue(data.data, "total_interactions");

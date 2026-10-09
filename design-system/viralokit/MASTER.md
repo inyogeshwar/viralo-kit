@@ -7,8 +7,9 @@
 ---
 
 **Project:** ViraloKit
-**Generated:** 2026-09-08 12:15:06
-**Category:** Photography Studio
+**Generated:** 2026-10-09 12:07:57
+**Category:** Luxury/Premium Brand
+**Design Dials:** Motion 8/10 (Complex)
 
 ---
 
@@ -18,35 +19,35 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#18181B` | `--color-primary` |
+| Primary | `#1C1917` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#27272A` | `--color-secondary` |
+| Secondary | `#44403C` | `--color-secondary` |
 | On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#F8FAFC` | `--color-accent` |
-| On Accent/CTA | `#0F172A` | `--color-on-accent` |
-| Background | `#000000` | `--color-background` |
-| Foreground | `#FAFAFA` | `--color-foreground` |
-| Card | `#0C0C0C` | `--color-card` |
-| Card Foreground | `#FAFAFA` | `--color-card-foreground` |
-| Muted | `#181818` | `--color-muted` |
-| Muted Foreground | `#94A3B8` | `--color-muted-foreground` |
-| Border | `#3F3F46` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| On Destructive | `#000000` | `--color-on-destructive` |
-| Ring | `#FFFFFF` | `--color-ring` |
+| Accent/CTA | `#A16207` | `--color-accent` |
+| On Accent/CTA | `#FFFFFF` | `--color-on-accent` |
+| Background | `#0F172A` | `--color-background` |
+| Foreground | `#F8FAFC` | `--color-foreground` |
+| Card | `#111827` | `--color-card` |
+| Card Foreground | `#F8FAFC` | `--color-card-foreground` |
+| Muted | `#1E293B` | `--color-muted` |
+| Muted Foreground | `#CBD5E1` | `--color-muted-foreground` |
+| Border | `#334155` | `--color-border` |
+| Destructive | `#DC2626` | `--color-destructive` |
+| On Destructive | `#FFFFFF` | `--color-on-destructive` |
+| Ring | `#A16207` | `--color-ring` |
 
-**Color Notes:** Pure black + white contrast
+**Color Notes:** Premium black + gold accent [Accent adjusted from #CA8A04]
 
 ### Typography
 
-- **Heading Font:** Archivo
-- **Body Font:** Space Grotesk
-- **Mood:** minimal, portfolio, designer, creative, clean, artistic
-- **Google Fonts:** [Archivo + Space Grotesk](https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Cormorant
+- **Body Font:** Montserrat
+- **Mood:** luxury, high-end, fashion, elegant, refined, premium
+- **Google Fonts:** [Cormorant + Montserrat](https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
@@ -79,7 +80,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #F8FAFC;
+  background: #A16207;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -96,8 +97,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #18181B;
-  border: 2px solid #18181B;
+  color: #1C1917;
+  border: 2px solid #1C1917;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -110,7 +111,7 @@
 
 ```css
 .card {
-  background: #000000;
+  background: #0F172A;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -136,9 +137,9 @@
 }
 
 .input:focus {
-  border-color: #18181B;
+  border-color: #1C1917;
   outline: none;
-  box-shadow: 0 0 0 3px #18181B20;
+  box-shadow: 0 0 0 3px #1C191720;
 }
 ```
 
@@ -164,13 +165,13 @@
 
 ## Style Guidelines
 
-**Style:** Motion-Driven
+**Style:** Liquid Glass
 
-**Keywords:** Animation-heavy, microinteractions, smooth transitions, scroll effects, parallax, entrance anim, page transitions
+**Keywords:** dynamic material, optical glass, translucency, lensing, refraction, fluid morphing, system navigation
 
-**Best For:** Portfolio sites, storytelling platforms, interactive experiences, entertainment apps, creative, SaaS
+**Best For:** Apple-platform navigation, controls, and system-aligned app chrome
 
-**Key Effects:** Scroll anim (Intersection Observer), hover (300-400ms), entrance, parallax (3-5 layers), page transitions
+**Key Effects:** Lensing and refraction, adaptive translucency, and fluid morph transitions aligned to Apple platform behavior
 
 ### Page Pattern
 
@@ -182,10 +183,26 @@
 
 ---
 
+## Motion
+
+**Page Transition** (Complex) — Trigger: route change | Duration: 500-800ms | Easing: `expo.inOut`
+
+```js
+const state = Flip.getState('.hero-image'); navigate(); Flip.from(state, { duration: 0.6, ease: 'expo.inOut', absolute: true, zIndex: 100 });
+```
+
+**Framework notes:** Requires the GSAP Flip plugin; the 'from' and 'to' route must render the same element with a shared data-flip-id; Use matchMedia('(prefers-reduced-motion: reduce)') to skip non-essential motion and render the final state immediately
+
+- ✅ Verify the shared element exists in both DOM states before calling Flip.from to avoid a silent no-op
+- ❌ Don't use shared-element transitions across more than one element pair per navigation; compounding Flips are hard to time correctly
+- ⚡ Flip recalculates layout (FLIP technique) so test on low-end devices for jank
+
+---
+
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Heavy text
-- ❌ Poor image showcase
+- ❌ Cheap visuals
+- ❌ Fast animations
 
 ### Additional Forbidden Patterns
 

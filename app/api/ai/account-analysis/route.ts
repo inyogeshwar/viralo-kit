@@ -3,7 +3,8 @@ import { z } from "zod";
 import { fetchAccountAnalytics } from "@/lib/meta/insights";
 import { generateAccountAnalysisWithAi } from "@/lib/ai/account-analysis";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getDb, schema } from "@/db";
+import { getUserInstagramCredentials } from "@/lib/meta/user-account";
+import { createClient } from "@/lib/supabase/server";
 
 import { sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -29,8 +30,15 @@ export async function POST(request: Request) {
       ? validated.data
       : { modelId: "openrouter/free", enableGeminiFallback: true, language: "English" as const };
 
+    const credentials = await getUserInstagramCredentials(user.id);
+    if (!credentials) {
+      return NextResponse.json(
+        { error: "No connected Instagram account found to audit. Please connect your account first." },
+        { status: 400 }
+      );
+    }
     // 1. Fetch real Meta analytics
-    const analytics = await fetchAccountAnalytics();
+    const analytics = await fetchAccountAnalytics(credentials.instagramUserId, credentials.accessToken);
     if (!analytics) {
       return NextResponse.json(
         { error: "No connected Instagram account found to audit. Please connect your account first." },
@@ -42,16 +50,15 @@ export async function POST(request: Request) {
     const audit = await generateAccountAnalysisWithAi(analytics, modelId, enableGeminiFallback, language);
 
     // 3. Save generation record
-    const db = getDb();
-    if (db && user) {
+    const supabase = await createClient();
+    if (user) {
       try {
-        await db.insert(schema.aiGenerations).values({
-          id: crypto.randomUUID(),
-          workosUserId: user.workosUserId,
+        await supabase.from("ai_generations").insert({
+          user_id: user.id,
           provider: audit.provider,
           model: audit.model,
-          generationType: "account_audit",
-          inputMetadata: { username: analytics.account.username },
+          generation_type: "account_audit",
+          input_metadata: { username: analytics.account.username },
           output: JSON.stringify(audit),
         });
       } catch (err) {

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface PostPreviewProps {
   username?: string;
   avatarUrl?: string | null;
-  mediaType: "IMAGE" | "CAROUSEL";
+  mediaType: "IMAGE" | "CAROUSEL" | "REELS" | "STORIES";
   imageUrls: string[];
   caption: string;
   hashtags?: string[];

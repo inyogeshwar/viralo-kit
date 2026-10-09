@@ -12,15 +12,14 @@ export interface RefreshTokenResult {
  * once they are at least 24 hours old.
  * Mirrors the n8n production token refresh flow.
  */
-export async function refreshLongLivedAccessToken(accessToken?: string): Promise<RefreshTokenResult> {
-  const token = accessToken || config.meta.defaultAccessToken;
-  if (!token) {
-    throw new Error("No access token provided or configured in environment.");
+export async function refreshLongLivedAccessToken(accessToken: string): Promise<RefreshTokenResult> {
+  if (!accessToken) {
+    throw new Error("No access token provided.");
   }
 
   // 1. Try Instagram Graph API refresh endpoint
   try {
-    const igUrl = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(token)}`;
+    const igUrl = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(accessToken)}`;
     const igRes = await fetch(igUrl, { method: "GET" });
     const igData = await igRes.json();
 
@@ -37,7 +36,7 @@ export async function refreshLongLivedAccessToken(accessToken?: string): Promise
 
   // 2. Fallback to Facebook Graph API exchange token if app credentials exist
   if (config.meta.appId && config.meta.appSecret) {
-    const fbUrl = `https://graph.facebook.com/${config.meta.apiVersion}/oauth/access_token?grant_type=fb_exchange_token&client_id=${config.meta.appId}&client_secret=${config.meta.appSecret}&fb_exchange_token=${encodeURIComponent(token)}`;
+    const fbUrl = `https://graph.facebook.com/${config.meta.apiVersion}/oauth/access_token?grant_type=fb_exchange_token&client_id=${config.meta.appId}&client_secret=${config.meta.appSecret}&fb_exchange_token=${encodeURIComponent(accessToken)}`;
     const fbRes = await fetch(fbUrl, { method: "GET" });
     const fbData = await fbRes.json();
 

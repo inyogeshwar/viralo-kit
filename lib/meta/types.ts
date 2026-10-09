@@ -18,7 +18,7 @@ export interface AccountCapabilities {
 }
 
 export interface PublishResult {
-  type: "IMAGE" | "CAROUSEL";
+  type: "IMAGE" | "CAROUSEL" | "REELS" | "STORIES";
   containerId: string;
   mediaId: string;
   permalink?: string;
@@ -29,7 +29,7 @@ export interface PublishResult {
 export interface InstagramMediaItem {
   id: string;
   caption?: string;
-  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM" | "REELS" | "STORIES";
   media_url?: string;
   thumbnail_url?: string;
   permalink?: string;
@@ -63,6 +63,12 @@ export interface NormalizedAccountAnalytics {
     totalComments: number;
     totalInteractions: number;
     averageEngagementRate: string;
+  };
+  demographics?: {
+    audienceCity?: Record<string, number>;
+    audienceCountry?: Record<string, number>;
+    audienceGenderAge?: Record<string, number>;
+    onlineFollowers?: Record<string, number>;
   };
   snapshotsTimestamp: string;
 }

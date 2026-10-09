@@ -56,12 +56,13 @@ export default function CreatePostPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
-  const [postType, setPostType] = useState<"IMAGE" | "CAROUSEL">("IMAGE");
+  const [postType, setPostType] = useState<"IMAGE" | "CAROUSEL" | "REELS" | "STORIES">("IMAGE");
   const [aspectRatio, setAspectRatio] = useState<"1:1" | "4:5" | "9:16">("4:5");
   const [images, setImages] = useState<string[]>([]);
   const [caption, setCaption] = useState("");
   const [hashtags, setHashtags] = useState<string[]>(["#digitalmarketing", "#contentcreator"]);
   const [customTagInput, setCustomTagInput] = useState("");
+  const [scheduledFor, setScheduledFor] = useState<string>("");
 
   // AI & Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -96,6 +97,7 @@ export default function CreatePostPage() {
   const optimizeImageForUpload = async (file: File): Promise<File | Blob> => {
     if (file.size <= 1.2 * 1024 * 1024) return file;
 
+    if (!file.type.startsWith("image/")) return file;
     return new Promise((resolve) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
@@ -158,6 +160,11 @@ export default function CreatePostPage() {
       toast.error("Instagram carousels support a maximum of 10 images.");
       return;
     }
+    
+    if ((postType === "REELS" || postType === "STORIES" || postType === "IMAGE") && fileList.length > 1) {
+      toast.error(`Only 1 file can be uploaded for ${postType}.`);
+      return;
+    }
 
     setIsUploading(true);
     const newUrls: string[] = [];
@@ -198,7 +205,7 @@ export default function CreatePostPage() {
         }
       }
 
-      if (postType === "IMAGE") {
+      if (postType === "IMAGE" || postType === "REELS" || postType === "STORIES") {
         setImages([newUrls[0]]);
       } else {
         setImages((prev) => [...prev, ...newUrls].slice(0, 10));
@@ -360,6 +367,7 @@ export default function CreatePostPage() {
           mediaType: postType,
           caption: finalCaption,
           imageUrls: images,
+          scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : undefined,
         }),
       });
 
@@ -418,7 +426,7 @@ export default function CreatePostPage() {
   const suggestedTags = ["#growth", "#creatorlife", "#instatips", "#aesthetic", "#reelstrending", "#foryou"];
 
   return (
-    <div className="flex min-h-screen bg-[#000000] text-zinc-100 font-sans selection:bg-pink-500 selection:text-white">
+    <div className="flex min-h-screen bg-[#050505] overflow-hidden relative text-zinc-100 font-sans selection:bg-pink-500 selection:text-white">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-0">
@@ -427,7 +435,10 @@ export default function CreatePostPage() {
           isConnected={accountData?.connected}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8 relative z-10">
+          <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-pink-500/10 blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-pink-600/10 to-transparent blur-[120px] pointer-events-none" />
+          
           {/* Top Bar: Title & Primary Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-6">
             <div>
@@ -457,15 +468,16 @@ export default function CreatePostPage() {
                 <span>Save Draft</span>
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toast.info("Schedule feature: Set your target date & time before publishing.")}
-                className="glass-panel text-xs gap-1.5 text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700"
-              >
-                <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Schedule</span>
-              </Button>
+              <div className="relative flex items-center group">
+                <input
+                  type="datetime-local"
+                  value={scheduledFor}
+                  onChange={(e) => setScheduledFor(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  title="Schedule this post for later"
+                  className="glass-panel text-[11px] text-zinc-300 hover:text-white border-zinc-800 hover:border-zinc-700 bg-transparent px-3 py-1.5 h-8 rounded-md focus:outline-none focus:ring-1 focus:ring-pink-500 cursor-pointer w-40"
+                />
+              </div>
 
               <Button
                 size="sm"
@@ -484,7 +496,7 @@ export default function CreatePostPage() {
                 ) : (
                   <Send className="w-3.5 h-3.5" />
                 )}
-                <span>Publish Now</span>
+                <span>{scheduledFor ? "Schedule Post" : "Publish Now"}</span>
               </Button>
             </div>
           </div>
@@ -494,7 +506,7 @@ export default function CreatePostPage() {
             {/* Left Column: Media Upload & AI Studio (7 Cols) */}
             <div className="lg:col-span-7 space-y-6">
               {/* Media Assets Section */}
-              <div className="bg-[#0C0C0C] border border-white/[0.08] rounded-3xl p-6 sm:p-7 space-y-6 shadow-xl">
+              <div className="glass-card bg-white/5 border border-white/10 rounded-[2rem] p-6 sm:p-7 space-y-6 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
                   <div>
                     <h2 className="text-base font-bold text-white font-headline flex items-center gap-2">
@@ -510,7 +522,7 @@ export default function CreatePostPage() {
                   </div>
 
                   {/* Post Type Selector (Single Image vs Carousel) */}
-                  <div className="flex items-center gap-1 p-1 bg-black/60 border border-white/[0.1] rounded-xl self-start sm:self-auto">
+                  <div className="flex items-center gap-1 p-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl self-start sm:self-auto">
                     <button
                       onClick={() => {
                         setPostType("IMAGE");
@@ -535,7 +547,37 @@ export default function CreatePostPage() {
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
-                      <span>Carousel (2-10)</span>
+                      <span>Carousel</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setPostType("REELS");
+                        if (images.length > 1) setImages([images[0]]);
+                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all ${
+                        postType === "REELS"
+                          ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md font-semibold"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Reels</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setPostType("STORIES");
+                        if (images.length > 1) setImages([images[0]]);
+                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all ${
+                        postType === "STORIES"
+                          ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md font-semibold"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Stories</span>
                     </button>
                   </div>
                 </div>
@@ -584,7 +626,7 @@ export default function CreatePostPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept={postType === "REELS" ? "video/*" : postType === "STORIES" ? "image/*,video/*" : "image/*"}
                     multiple={postType === "CAROUSEL"}
                     className="hidden"
                     onChange={handleFileUpload}
@@ -600,8 +642,10 @@ export default function CreatePostPage() {
                     {isUploading ? "Uploading to Cloudinary CDN..." : "Drag and drop your media here"}
                   </p>
                   <p className="text-[11px] text-zinc-400 mt-1">
-                    Supports JPG, PNG, WEBP • Max 10MB per image
+                    Supports JPG, PNG, WEBP, MP4
                     {postType === "CAROUSEL" && " • Select 2 to 10 images for carousel"}
+                    {postType === "REELS" && " • Select 1 video for reels"}
+                    {postType === "STORIES" && " • Select 1 image or video for stories"}
                   </p>
                   <Button
                     type="button"
@@ -648,7 +692,11 @@ export default function CreatePostPage() {
                           key={idx}
                           className="relative group rounded-xl overflow-hidden border border-zinc-700 bg-zinc-900 aspect-square shadow-md"
                         >
-                          <img src={img} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
+                          {img.toLowerCase().endsWith(".mp4") || img.toLowerCase().endsWith(".mov") ? (
+                            <video src={img} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                          ) : (
+                            <img src={img} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
+                          )}
 
                           <span className="absolute top-1 left-1 bg-black/75 backdrop-blur-sm rounded px-1.5 text-[10px] font-bold text-white">
                             #{idx + 1}
@@ -787,7 +835,7 @@ export default function CreatePostPage() {
               )}
 
               {/* AI Caption & Details Studio */}
-              <div className="bg-[#0C0C0C] border border-white/[0.08] rounded-3xl p-6 sm:p-7 space-y-6 shadow-xl">
+              <div className="glass-card bg-white/5 border border-white/10 rounded-[2rem] p-6 sm:p-7 space-y-6 shadow-2xl">
                 <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-white/[0.08]">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-purple-400" />
@@ -803,7 +851,7 @@ export default function CreatePostPage() {
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value)}
-                      className="bg-black/60 border border-white/[0.1] rounded-xl px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-pink-500 cursor-pointer"
+                      className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-pink-500 cursor-pointer"
                     >
                       <option value="openrouter/free">Auto — Intelligent Free Router</option>
                       {modelsData?.freeTextModels?.map((m: any) => (
@@ -848,7 +896,7 @@ export default function CreatePostPage() {
                     onChange={(e) => setCaption(e.target.value)}
                     placeholder="Write your Instagram caption here or click Generate with AI..."
                     rows={5}
-                    className="w-full bg-black/60 border border-white/[0.1] rounded-2xl p-4 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-pink-500/80 focus:ring-2 focus:ring-pink-500/20 resize-y leading-relaxed transition-all"
+                    className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-pink-500/80 focus:ring-2 focus:ring-pink-500/20 resize-y leading-relaxed transition-all"
                   />
                 </div>
 
@@ -959,7 +1007,7 @@ export default function CreatePostPage() {
                           }
                         }}
                         placeholder="+ Add tag..."
-                        className="bg-black/60 border border-white/[0.1] rounded-full px-3.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-pink-500 w-32"
+                        className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-3.5 py-1 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-pink-500 w-32"
                       />
                       {customTagInput.trim() && (
                         <button
@@ -994,7 +1042,7 @@ export default function CreatePostPage() {
             {/* Right Column: Live Instagram Preview & Publishing (5 Cols) */}
             <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
               {/* Device Preview Card */}
-              <div className="bg-[#0C0C0C] border border-white/[0.08] rounded-3xl p-6 space-y-4 shadow-xl">
+              <div className="glass-card bg-white/5 border border-white/10 rounded-[2rem] p-6 space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -1019,7 +1067,7 @@ export default function CreatePostPage() {
               </div>
 
               {/* Publish Control Card */}
-              <div className="bg-[#0C0C0C] border border-white/[0.08] rounded-3xl p-6 space-y-4 shadow-xl">
+              <div className="glass-card bg-white/5 border border-white/10 rounded-[2rem] p-6 space-y-4 shadow-2xl">
                 {publishStatus !== "idle" && (
                   <div className="p-4 bg-black/60 rounded-2xl border border-white/[0.08] text-xs space-y-2.5">
                     <div className="flex items-center gap-2 font-medium">
@@ -1076,7 +1124,7 @@ export default function CreatePostPage() {
                     (postType === "CAROUSEL" && images.length < 2) ||
                     (publishStatus !== "idle" && publishStatus !== "failed")
                   }
-                  className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:opacity-95 text-white font-bold text-sm gap-2 h-12 rounded-xl shadow-xl shadow-pink-500/20 transition-all cursor-pointer"
+                  className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:opacity-95 text-white font-bold text-sm gap-2 h-12 rounded-xl shadow-2xl shadow-pink-500/20 transition-all cursor-pointer"
                 >
                   {publishStatus === "creating_container" ||
                   publishStatus === "processing" ||
@@ -1087,8 +1135,8 @@ export default function CreatePostPage() {
                   )}
                   <span>
                     {postType === "CAROUSEL"
-                      ? `Publish Carousel (${images.length} slides)`
-                      : "Publish to Instagram"}
+                      ? scheduledFor ? `Schedule Carousel (${images.length} slides)` : `Publish Carousel (${images.length} slides)`
+                      : scheduledFor ? "Schedule to Instagram" : "Publish to Instagram"}
                   </span>
                 </Button>
 

@@ -33,13 +33,17 @@ export const config = {
   database: {
     url: clean(process.env.DATABASE_URL),
   },
+  supabase: {
+    url: clean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    anonKey: clean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+  },
   ai: {
     openRouterKey: clean(process.env.OPENROUTER_API_KEY),
     geminiKey: clean(process.env.GEMINI_API_KEY),
   },
   auth: {
     // Comma-separated list of authorized WorkOS user IDs or emails.
-    // If left blank/unset, all authenticated WorkOS users can manage the studio.
+    // If left blank/unset, no users will have admin privileges.
     adminUserIds: clean(process.env.ADMIN_WORKOS_USER_IDS)
       ? clean(process.env.ADMIN_WORKOS_USER_IDS)
           .split(",")
@@ -47,17 +51,20 @@ export const config = {
           .filter(Boolean)
       : [],
   },
+  security: {
+    encryptionKey: clean(process.env.ENCRYPTION_KEY),
+  },
 };
 
 /**
- * Checks if a given WorkOS user is authorized to perform privileged Meta operations.
+ * Checks if a given Supabase user is authorized to perform privileged Meta operations.
  * If ADMIN_WORKOS_USER_IDS is configured, user must match one of the allowed IDs or emails.
  */
-export function isAuthorizedUser(user: { workosUserId: string; email?: string } | null): boolean {
+export function isAuthorizedUser(user: { id: string; email?: string } | null): boolean {
   if (!user) return false;
   const admins = config.auth.adminUserIds;
-  if (admins.length === 0) return true; // Open to all authenticated users if no restriction set
-  return admins.includes(user.workosUserId) || (user.email ? admins.includes(user.email) : false);
+  if (admins.length === 0) return false; // Fail closed: if no admins are configured, no one is admin
+  return admins.includes(user.id) || (user.email ? admins.includes(user.email) : false);
 }
 
 export function getMetaGraphVersion(): string {
@@ -80,11 +87,9 @@ export function validateProductionEnvironment(): { valid: boolean; missing: stri
   }
 
   const required = [
-    "WORKOS_API_KEY",
-    "WORKOS_CLIENT_ID",
-    "WORKOS_COOKIE_PASSWORD",
-    "IG_USER_ID",
-    "IG_ACCESS_TOKEN",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "ENCRYPTION_KEY",
   ];
 
   const missing = required.filter((key) => !process.env[key] || !process.env[key]?.trim());

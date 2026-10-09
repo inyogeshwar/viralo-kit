@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchAccountAnalytics } from "@/lib/meta/insights";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getUserInstagramCredentials } from "@/lib/meta/user-account";
 
 import { sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -14,7 +15,14 @@ export async function GET() {
   }
 
   try {
-    const analytics = await fetchAccountAnalytics();
+    const credentials = await getUserInstagramCredentials(user.id);
+    if (!credentials) {
+      return NextResponse.json(
+        { error: "No connected Instagram account found." },
+        { status: 404 }
+      );
+    }
+    const analytics = await fetchAccountAnalytics(credentials.instagramUserId, credentials.accessToken);
     if (!analytics) {
       return NextResponse.json(
         { error: "Unable to retrieve Instagram analytics. Check account connection." },

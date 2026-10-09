@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateCaptionWithAi, CaptionTone, CaptionAction } from "@/lib/ai/caption-generator";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getDb, schema } from "@/db";
+import { createClient } from "@/lib/supabase/server";
 
 import { sanitizePromptInput, sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -50,16 +50,15 @@ export async function POST(request: Request) {
     });
 
     // Record in DB if available
-    const db = getDb();
-    if (db && user) {
+    const supabase = await createClient();
+    if (user) {
       try {
-        await db.insert(schema.aiGenerations).values({
-          id: crypto.randomUUID(),
-          workosUserId: user.workosUserId,
+        await supabase.from("ai_generations").insert({
+          user_id: user.id,
           provider: result.provider,
           model: result.model,
-          generationType: "caption",
-          inputMetadata: { tone, action, contextLength: sanitizedContext.length },
+          generation_type: "caption",
+          input_metadata: { tone, action, contextLength: sanitizedContext.length },
           output: JSON.stringify(result),
         });
       } catch (err) {

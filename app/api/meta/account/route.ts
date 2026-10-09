@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { detectAccountCapabilities } from "@/lib/meta/capabilities";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getUserInstagramCredentials } from "@/lib/meta/user-account";
 
 import { sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -14,7 +15,15 @@ export async function GET() {
   }
 
   try {
-    const capabilities = await detectAccountCapabilities();
+    const credentials = await getUserInstagramCredentials(user.id);
+    if (!credentials) {
+      return NextResponse.json({
+        connected: false,
+        reason: "No Instagram account connected.",
+      });
+    }
+
+    const capabilities = await detectAccountCapabilities(credentials.instagramUserId, credentials.accessToken);
     return NextResponse.json(capabilities);
   } catch (err: any) {
     return NextResponse.json(

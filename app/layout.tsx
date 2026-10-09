@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Analytics } from "@vercel/analytics/next";
-import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
+
 
 export const metadata: Metadata = {
   title: {
@@ -86,7 +86,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
         <Providers>
-          <AuthKitProvider>{children}</AuthKitProvider>
+          {children}
         </Providers>
         <Analytics />
       </body>

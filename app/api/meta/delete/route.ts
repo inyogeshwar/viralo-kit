@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { deleteInstagramMedia, bulkDeleteInstagramMedia } from "@/lib/meta/deletion";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getDb, schema } from "@/db";
-import { eq, and } from "drizzle-orm";
-import { isAuthorizedUser } from "@/lib/config";
+import { createClient } from "@/lib/supabase/server";
+import { getUserInstagramCredentials } from "@/lib/meta/user-account";
 
 import { sanitizeErrorMessage } from "@/lib/security/sanitize";
 
@@ -23,9 +22,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!isAuthorizedUser(user)) {
+    const credentials = await getUserInstagramCredentials(user.id);
+    if (!credentials) {
       return NextResponse.json(
-        { error: "You are not authorized to delete media from this account.", code: "FORBIDDEN" },
+        { error: "No connected Instagram account found.", code: "NO_ACCOUNT" },
         { status: 403 }
       );
     }
@@ -38,26 +38,22 @@ export async function POST(request: Request) {
     }
 
     const { mediaId, mediaIds } = validated.data;
-    const db = getDb();
+    const supabase = await createClient();
 
     // 1. Bulk deletion
     if (mediaIds && mediaIds.length > 0) {
-      const summary = await bulkDeleteInstagramMedia(mediaIds);
+      const summary = await bulkDeleteInstagramMedia(mediaIds, credentials.accessToken);
 
       // Update local DB for successful items strictly scoped to authenticated user
-      if (db && user) {
+      if (user) {
         for (const item of summary.results) {
           if (item.status === "deleted") {
             try {
-              await db
-                .update(schema.posts)
-                .set({ status: "deleted", updatedAt: new Date() })
-                .where(
-                  and(
-                    eq(schema.posts.instagramMediaId, item.mediaId),
-                    eq(schema.posts.workosUserId, user.workosUserId)
-                  )
-                );
+              await supabase
+                .from("posts")
+                .update({ status: "deleted", updated_at: new Date().toISOString() })
+                .eq("instagram_media_id", item.mediaId)
+                .eq("user_id", user.id);
             } catch (err) {
               console.warn("DB update failed for deleted post:", err);
             }
@@ -73,20 +69,16 @@ export async function POST(request: Request) {
 
     // 2. Single deletion
     if (mediaId) {
-      const outcome = await deleteInstagramMedia(mediaId);
+      const outcome = await deleteInstagramMedia(mediaId, credentials.accessToken);
 
       if (outcome.success) {
-        if (db && user) {
+        if (user) {
           try {
-            await db
-              .update(schema.posts)
-              .set({ status: "deleted", updatedAt: new Date() })
-              .where(
-                and(
-                  eq(schema.posts.instagramMediaId, mediaId),
-                  eq(schema.posts.workosUserId, user.workosUserId)
-                )
-              );
+            await supabase
+              .from("posts")
+              .update({ status: "deleted", updated_at: new Date().toISOString() })
+              .eq("instagram_media_id", mediaId)
+              .eq("user_id", user.id);
           } catch (err) {
             console.warn("DB update failed for single deleted post:", err);
           }

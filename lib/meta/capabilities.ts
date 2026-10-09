@@ -2,12 +2,9 @@ import { config, getMetaGraphUrl } from "@/lib/config";
 import { AccountCapabilities } from "./types";
 
 export async function detectAccountCapabilities(
-  customUserId?: string,
-  customAccessToken?: string
+  userId: string,
+  accessToken: string
 ): Promise<AccountCapabilities> {
-  const userId = customUserId || config.meta.defaultUserId;
-  const accessToken = customAccessToken || config.meta.defaultAccessToken;
-
   if (!userId || !accessToken) {
     return {
       connected: false,

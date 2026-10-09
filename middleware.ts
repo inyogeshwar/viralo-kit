@@ -1,25 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { authkit, handleAuthkitHeaders } from "@workos-inc/authkit-nextjs";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 import { rateLimiter, RATE_LIMIT_TIERS, getClientIp, type RateLimitTier } from "@/lib/security/rate-limit";
+import { config as appConfig } from "@/lib/config";
 
-export default async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const ip = getClientIp(request.headers);
 
-  // =========================================================================
   // 1. PRODUCTION RATE LIMITING (Layer 1 Defense against abuse and DoS)
-  // =========================================================================
   if (pathname.startsWith("/api/")) {
     let tier: RateLimitTier = RATE_LIMIT_TIERS.GENERAL_API;
 
     if (pathname.startsWith("/api/auth/")) {
-      // 5 requests per 15 minutes per IP
       tier = RATE_LIMIT_TIERS.AUTH;
     } else if (pathname.startsWith("/api/ai/")) {
-      // 10 requests per minute per IP
       tier = RATE_LIMIT_TIERS.AI_PROXY;
     } else if (pathname.startsWith("/api/cloudinary/")) {
-      // 5 requests per minute per IP (uploads & CDN cleanup)
       tier = RATE_LIMIT_TIERS.UPLOADS;
     }
 
@@ -45,59 +41,67 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // If WorkOS environment variables are not set, allow dev mode
-  if (!process.env.WORKOS_API_KEY || !process.env.WORKOS_CLIENT_ID) {
-    return NextResponse.next();
+  // 2. SUPABASE SESSION VALIDATION
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  const supabase = createServerClient(
+    appConfig.supabase.url,
+    appConfig.supabase.anonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const protectedRoutes = [
+    "/dashboard",
+    "/create",
+    "/posts",
+    "/analytics",
+    "/ai-analysis",
+    "/settings",
+  ];
+
+  const isPageProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isApiProtected =
+    pathname.startsWith("/api/meta") ||
+    pathname.startsWith("/api/cloudinary") ||
+    pathname.startsWith("/api/ai");
+
+  if (isApiProtected && !user) {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { error: "Authentication required", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
   }
 
-  // =========================================================================
-  // 2. SESSION VALIDATION & ROLE-LEVEL ACCESS CONTROL
-  // =========================================================================
-  try {
-    const redirectUri =
-      process.env.NODE_ENV === "production"
-        ? "https://viralokit.vercel.app/callback"
-        : `${request.nextUrl.origin}/callback`;
-
-    const { session, headers, authorizationUrl } = await authkit(request, {
-      redirectUri,
-    });
-
-    const protectedRoutes = [
-      "/dashboard",
-      "/create",
-      "/posts",
-      "/analytics",
-      "/ai-analysis",
-      "/settings",
-    ];
-
-    const isPageProtected = protectedRoutes.some((route) => pathname.startsWith(route));
-    const isApiProtected =
-      pathname.startsWith("/api/meta") ||
-      pathname.startsWith("/api/cloudinary") ||
-      pathname.startsWith("/api/ai");
-
-    // Unauthenticated API calls must receive 401 Unauthorized
-    if (isApiProtected && !session.user) {
-      if (process.env.NODE_ENV === "production") {
-        return NextResponse.json(
-          { error: "Authentication required", code: "UNAUTHORIZED" },
-          { status: 401 }
-        );
-      }
-    }
-
-    // Unauthenticated page visits redirect to WorkOS AuthKit
-    if (isPageProtected && !session.user && authorizationUrl) {
-      return handleAuthkitHeaders(request, headers, { redirect: authorizationUrl });
-    }
-
-    return handleAuthkitHeaders(request, headers);
-  } catch (err) {
-    console.error("Middleware auth error:", err);
-    return NextResponse.next();
+  if (isPageProtected && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
+
+  return supabaseResponse;
 }
 
 export const config = {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { fetchMediaInsights } from "@/lib/meta/insights";
+import { getUserInstagramCredentials } from "@/lib/meta/user-account";
 import { sanitizeErrorMessage } from "@/lib/security/sanitize";
 
 export async function GET(req: NextRequest) {
@@ -34,7 +35,15 @@ export async function GET(req: NextRequest) {
       permalink,
     };
 
-    const insights = await fetchMediaInsights(mediaId, mediaItem);
+    const credentials = await getUserInstagramCredentials(user.id);
+    if (!credentials) {
+      return NextResponse.json(
+        { error: "No connected Instagram account found", code: "NO_ACCOUNT" },
+        { status: 403 }
+      );
+    }
+
+    const insights = await fetchMediaInsights(mediaId, credentials.accessToken, mediaItem);
 
     return NextResponse.json({
       success: true,

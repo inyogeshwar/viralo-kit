@@ -80,6 +80,26 @@ export default function SettingsPage() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (!confirm("Are you sure you want to disconnect your Instagram account? You will need to reconnect it to publish again.")) return;
+    try {
+      const res = await fetch("/api/meta/oauth/disconnect", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Account disconnected successfully");
+        refetchCap();
+      } else {
+        toast.error(data.error || "Failed to disconnect");
+      }
+    } catch (err: any) {
+      toast.error("Network error disconnecting account");
+    }
+  };
+
+  const handleConnect = () => {
+    window.location.href = "/api/meta/oauth/start";
+  };
+
   const handleSavePreferences = () => {
     toast.success("AI and provider preferences updated!");
   };
@@ -145,22 +165,48 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-black/60 rounded-2xl border border-white/[0.08]">
-              <div className="text-xs">
-                <p className="text-zinc-200 font-bold font-headline">Keep Token Alive (Auto-Refresh)</p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">Instagram long-lived tokens last 60 days. Extend validity safely.</p>
+            {capabilities?.connected ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-black/60 rounded-2xl border border-white/[0.08]">
+                <div className="text-xs">
+                  <p className="text-zinc-200 font-bold font-headline">Manage Connection</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">Extend your 60-day token or disconnect your account.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshToken}
+                    disabled={isRefreshingToken}
+                    className="h-9 px-4 rounded-xl text-xs gap-2 border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingToken ? "animate-spin text-pink-400" : ""}`} />
+                    <span>{isRefreshingToken ? "Extending..." : "Extend Token"}</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDisconnect}
+                    className="h-9 px-4 rounded-xl text-xs gap-2 border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 cursor-pointer"
+                  >
+                    Disconnect
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefreshToken}
-                disabled={isRefreshingToken || !capabilities?.connected}
-                className="h-9 px-4 rounded-xl text-xs gap-2 border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 cursor-pointer self-start sm:self-auto"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingToken ? "animate-spin text-pink-400" : ""}`} />
-                <span>{isRefreshingToken ? "Extending..." : "Extend 60 Days"}</span>
-              </Button>
-            </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-black/60 rounded-2xl border border-white/[0.08]">
+                <div className="text-xs">
+                  <p className="text-zinc-200 font-bold font-headline">Connect Instagram Professional Account</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">Securely authenticate with Meta to enable publishing and analytics.</p>
+                </div>
+                <Button
+                  onClick={handleConnect}
+                  className="h-9 px-4 rounded-xl text-xs gap-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white cursor-pointer"
+                >
+                  <Instagram className="w-4 h-4" />
+                  Connect Account
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Dynamic AI Models Configuration */}

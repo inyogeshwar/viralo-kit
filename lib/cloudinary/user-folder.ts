@@ -1,8 +1,6 @@
 import { CurrentUser } from "@/lib/auth/current-user";
 import { config, getMetaGraphUrl } from "@/lib/config";
-import { getDb } from "@/db";
-import { instagramAccounts } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { createClient } from "@/lib/supabase/server";
 
 export interface UserFolderInfo {
   folder: string;
@@ -79,26 +77,24 @@ export async function getUserCloudinaryFolder(
     }
   }
 
-  // 2. Query Neon PostgreSQL database for connected account username
+  // 2. Query Supabase PostgreSQL database for connected account username
   try {
-    const db = getDb();
-    if (db) {
-      const account = await db
-        .select({ username: instagramAccounts.username })
-        .from(instagramAccounts)
-        .where(eq(instagramAccounts.workosUserId, user.workosUserId))
-        .limit(1);
+    const supabase = await createClient();
+    const { data: account } = await supabase
+      .from("instagram_accounts")
+      .select("username")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-      if (account && account.length > 0 && account[0].username) {
-        const cleanUser = sanitizeForPath(account[0].username);
-        if (cleanUser.length > 0) {
-          return {
-            folder: `postgram/users/ig_${cleanUser}`,
-            prefix: `postgram/users/ig_${cleanUser}/`,
-            userIdentifier: cleanUser,
-            isIgUsername: true,
-          };
-        }
+    if (account?.username) {
+      const cleanUser = sanitizeForPath(account.username);
+      if (cleanUser.length > 0) {
+        return {
+          folder: `postgram/users/ig_${cleanUser}`,
+          prefix: `postgram/users/ig_${cleanUser}/`,
+          userIdentifier: cleanUser,
+          isIgUsername: true,
+        };
       }
     }
   } catch (err) {

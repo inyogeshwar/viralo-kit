@@ -30,7 +30,7 @@ export async function uploadImageBuffer(
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: "image",
+        resource_type: "auto",
         transformation: [{ quality: "auto:eco" }, { fetch_format: "auto" }],
       },
       (error, result) => {
@@ -63,7 +63,7 @@ export async function uploadImageFromUrl(
 
   const result = await cloudinary.uploader.upload(url, {
     folder,
-    resource_type: "image",
+    resource_type: "auto",
   });
 
   return {
